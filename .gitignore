@@ -1,3 +1,4 @@
 /pdf/
 /models/
 *.env
+__pycache__/
