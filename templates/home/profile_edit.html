@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile_edit.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <!-- Left Sidebar with Navigation Buttons -->
+    <div class="profile-sidebar">
+        <button class="profile-option active" data-section="view-profile">View Profile</button>
+        <button class="profile-option" data-section="edit-profile">Edit Profile</button>
+        <button class="profile-option" data-section="change-password">Change Password</button>
+        <button class="profile-option delete-account-btnn" data-section="delete-account">Delete Account</button>
+    </div>
+
+    <!-- Right Content Section -->
+    <div class="profile-content">
+        <!-- Show User Information by Default -->
+        <div id="view-profile" class="profile-section">
+            <h2>My Profile</h2>
+            <div class="profile-info">
+                <img src="{{ url_for('static', filename='images/avatars/' + current_user.profile_pic) }}" 
+                     alt="Profile Avatar" class="profile-avatar">
+                <p><strong>Name:</strong> {{ current_user.name }}</p>
+                <p><strong>Username:</strong> {{ current_user.username }}</p>
+                <p><strong>Email:</strong> {{ current_user.email }}</p>
+                <p><strong>Phone:</strong> {{ user.phoneNumber if user.phoneNumber else "Not Provided" }}</p>
+                <p><strong>Country:</strong> {{ user.country if user.country else "Not Provided" }}</p>
+            </div>
+        </div>
+
+        <!-- Edit Profile Section -->
+        <div id="edit-profile" class="profile-section hidden">
+            <h2>Edit Profile</h2>
+            <form method="POST">
+                <label for="name">Full Name:</label>
+                <input type="text" name="name" id="name" value="{{ current_user.name }}">
+
+                <label for="username">Username:</label>
+                <input type="text" name="username" id="username" value="{{ current_user.username }}">
+
+                <label for="email">Email:</label>
+                <input type="email" name="email" id="email" value="{{ current_user.email }}">
+
+                <!-- Change phone input name -->
+                <label for="phone">Phone:</label>
+                <input type="tel" name="phoneNumber" id="phone" value="{{ user.phoneNumber }}">
+                <!-- Changed name to phoneNumber -->
+
+                <!-- Change country input name -->
+                <label for="country">Country:</label>
+                <input type="text" name="country" id="country" value="{{ user.country }}">
+
+                <label>Select an Avatar:</label>
+                <div class="avatar-selection">
+                    {% for i in range(1, 11) %}
+                    <label>
+                        <input type="radio" name="profile_pic" value="avatar{{ i }}.png" {% if
+                            current_user.profile_pic=='avatar' ~ i ~ '.png' %} checked {% endif %}>
+                        <img src="{{ url_for('static', filename='images/avatars/avatar' ~ i ~ '.png') }}"
+                            class="avatar">
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <button type="submit" class="btnn btnn-primary">Update Profile</button>
+            </form>
+        </div>
+
+        <!-- Change Password Section -->
+        <div id="change-password" class="profile-section hidden">
+            <h2>Change Password</h2>
+            <form method="POST">
+                <label for="current_password">Current Password:</label>
+                <input type="password" name="current_password" id="current_password" required>
+
+                <label for="new_password">New Password:</label>
+                <input type="password" name="new_password" id="new_password" required>
+
+                <label for="confirm_password">Confirm New Password:</label>
+                <input type="password" name="confirm_password" id="confirm_password" required>
+
+                <button type="submit" class="btnn btnn-primary">Update Password</button>
+            </form>
+        </div>
+
+        <!-- Delete Account Section -->
+        <div id="delete-account" class="profile-section hidden">
+            <h2>Delete Account</h2>
+            <p class="text-danger">Warning: This action cannot be undone.</p>
+            <form method="POST" action="{{ url_for('auth.delete_account') }}">
+                <label for="confirm_delete_password">Enter Password to Confirm:</label>
+                <input type="password" name="confirm_delete_password" required>
+                <button type="submit" class="btnn btnn-danger">Delete My Account</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const options = document.querySelectorAll(".profile-option");
+        const sections = document.querySelectorAll(".profile-section");
+
+        // Ensure default profile view is visible
+        sections.forEach(section => section.classList.add("hidden"));
+        document.getElementById("view-profile").classList.remove("hidden");
+
+        options.forEach(option => {
+            option.addEventListener("click", function () {
+                // Remove active class from all buttons
+                options.forEach(btnn => btnn.classList.remove("active"));
+                this.classList.add("active");
+
+                // Hide all sections and show the selected one
+                sections.forEach(section => section.classList.add("hidden"));
+                document.getElementById(option.dataset.section).classList.remove("hidden");
+            });
+        });
+    });
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

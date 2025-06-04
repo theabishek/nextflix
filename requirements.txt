@@ -1,0 +1,36 @@
+# Flask and authentication-related packages
+flask
+flask-login
+flask-bcrypt
+flask-wtf
+flask-cors
+
+# Database and backend (MongoDB)
+pymongo
+dnspython
+
+# Machine learning and recommendation algorithms
+numpy
+pandas
+scikit-learn
+scikit-surprise
+
+# Web API and TMDB integration
+requests
+
+# Data visualization (optional)
+matplotlib
+seaborn
+
+# JSON handling and utilities
+jsonschema
+python-dotenv
+
+# Development and debugging tools
+black
+isort
+pylint
+
+
+# conda install --file requirements.txt -c conda-forge
+# or pip install -r requirements.txt

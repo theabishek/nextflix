@@ -1,0 +1,299 @@
+/* RECOMMENDATIONS PAGE SPECIFIC STYLES */
+/* Hero Section Enhancements */
+.recommendations-hero {
+    min-height: 70vh;
+    background-position: center 30%;
+}
+
+/* Search and Recommendation Forms */
+.recommendation-forms {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 30px;
+}
+
+.search-form,
+.mood-form {
+    flex: 1;
+    min-width: 280px;
+    position: relative;
+    overflow: visible;
+}
+
+.search-form input,
+.mood-form input {
+    width: 100%;
+    padding: 22px 35px;
+    border-radius: 30px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+}
+
+.search-form input:focus,
+.mood-form input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 3px rgba(229, 9, 20, 0.3);
+}
+
+.search-form button,
+.mood-form button {
+    position: absolute;
+    right: 5px;
+    top: 5px;
+    bottom: 5px;
+    padding: 0 20px;
+    border-radius: 25px;
+    border: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.search-form button {
+    background: var(--accent-primary);
+    color: white;
+}
+
+.mood-form button {
+    background: #4a148c;
+    /* Purple accent for mood button */
+    color: white;
+}
+
+.search-form button:hover {
+    background: var(--accent-primary-hover);
+    transform: translateY(-1px);
+}
+
+.mood-form button:hover {
+    background: #7b1fa2;
+    transform: translateY(-1px);
+}
+
+/* Suggestions Dropdown */
+/* RECOMMENDATIONS PAGE SPECIFIC STYLES */
+/* Modify the search form container */
+  
+.suggestions-list {
+    position: absolute;
+    top: calc(100% + 5px); /* Adjust as needed */
+    left: 0;
+    width: 100%;
+    background: #1a1a1a;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 99999; /* Very high so it always appears on top */
+    max-height: 300px;
+    overflow-y: auto;
+    display: none;  /* Default hidden; .visible will override this */
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    margin-top: 0;
+    transform: translateY(5px);
+}
+
+
+  
+  /* Remove this conflicting rule completely */
+  .search-form:focus-within .suggestions-list {
+      display: block;
+  }
+
+.suggestions-list li {
+    padding: 12px 20px;
+    color: #ffffff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    pointer-events: auto;
+    list-style-type: none;
+}
+
+.suggestions-list li:hover {
+    background-color: rgba(229, 9, 20, 0.1);
+    color: #e50914;
+}
+
+/* Recommendations Container */
+.recommendations-container {
+    position: relative;
+    z-index: 1; /* Ensure it stays behind */
+    padding: 40px 20px;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+/* Section Headers */
+.recommendation-section h2 {
+    font-size: 1.8rem;
+    margin-bottom: 25px;
+    padding-bottom: 10px;
+    position: relative;
+    color: white;
+}
+
+.recommendation-section h2::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 60px;
+    height: 3px;
+    background: var(--accent-primary);
+}
+
+.suggestions-list.visible {
+    display: block !important;
+}
+
+
+/* Movie Card Enhancements */
+.recommendation-card {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+}
+
+.recommendation-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(229, 9, 20, 0.2);
+}
+
+/* Poster Container */
+.poster-container {
+    position: relative;
+    height: 0;
+    padding-bottom: 150%;
+    overflow: hidden;
+}
+
+.poster-container img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.recommendation-card:hover .poster-container img {
+    transform: scale(1.05);
+}
+
+/* Movie Info */
+.movie-info {
+    padding: 15px;
+}
+
+.movie-info h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.movie-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Red Rating */
+.movie-meta span:last-child {
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+
+/* Loading State */
+.loading-spinner {
+    display: inline-block;
+    width: 30px;
+    height: 30px;
+    border: 3px solid rgba(255, 255, 255, .3);
+    border-radius: 50%;
+    border-top-color: var(--accent-primary);
+    animation: spin 1s ease-in-out infinite;
+    margin: 50px auto;
+    display: block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* No Results State */
+.no-results {
+    text-align: center;
+    padding: 50px;
+    color: var(--text-secondary);
+}
+
+.no-results i {
+    font-size: 3rem;
+    margin-bottom: 20px;
+    color: var(--accent-primary);
+    opacity: 0.5;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+    .recommendation-forms {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .poster-container {
+        padding-bottom: 140%;
+    }
+}
+
+@media (max-width: 768px) {
+    .recommendations-hero {
+        min-height: 60vh;
+    }
+
+    .recommendation-section h2 {
+        font-size: 1.5rem;
+    }
+
+    .movie-info h3 {
+        font-size: 1rem;
+    }
+
+    .card-popup {
+        font-size: 0.8rem;
+        padding: 6px 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .recommendations-hero {
+        min-height: 50vh;
+    }
+
+    .search-form,
+    .mood-form {
+        min-width: 100%;
+    }
+
+    .search-form button,
+    .mood-form button {
+        padding: 0 15px;
+    }
+
+    .poster-container {
+        padding-bottom: 130%;
+    }
+}

@@ -1,0 +1,17 @@
+name: nextflix-env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - flask
+  - flask-login
+  - flask-bcrypt
+  - pymongo
+  - python-dotenv
+  - pandas
+  - requests
+  - scikit-learn
+  - pip
+  - pip:
+      - waitress
+      - reportlab

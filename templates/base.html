@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NextFlix | {% block title %}{% if page_name %}{{ page_name }}{% else %}Home{% endif %}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/global.css') }}">
+  <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Montserrat:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  {% block css %}{% endblock %}
+</head>
+
+<body>
+  <nav class="main-nav">
+    <a href="{{ url_for('main.index') }}" class="brand">
+      <img src="{{ url_for('static', filename='images/logo-dark.png') }}" alt="NextFlix Logo" class="nav-logo"
+        loading="lazy">
+    </a>
+    <div class="nav-controls" style="display: flex; align-items: center; gap: 0.5rem;">
+      <!-- Search Icon & Dropdown -->
+      <div class="search-dropdown">
+        <button id="search-toggle" class="icon-btn" aria-label="Search">
+          <i class="fas fa-search"></i>
+        </button>
+        <div id="search-dropdown-menu" class="search-dropdown-menu">
+          <form id="search-form" action="{{ url_for('main.search') }}" method="get" autocomplete="off">
+            <input type="text" id="search-input" name="q" placeholder="Search movies..." required>
+            <div id="autocomplete-list" class="autocomplete-items"></div>
+          </form>
+        </div>
+      </div>
+      {% if current_user.is_authenticated %}
+      <!-- Hamburger Menu & Dropdown -->
+      <div class="user-dropdown">
+        <button id="user-toggle" class="icon-btn" aria-label="Menu">
+          <i class="fas fa-bars"></i>
+        </button>
+        <div id="user-dropdown-menu" class="user-dropdown-menu">
+          <div class="user-info">
+            <img src="{{ url_for('static', filename='images/avatars/' + current_user.profile_pic) }}" alt="Profile" class="avatar" loading="lazy">
+            <div class="user-text">
+              <span class="hello-greeting">Hello</span>
+              <span class="username">{{ current_user.name.split(' ')[0] }}</span>
+            </div>
+          </div>
+          <ul>
+            <li><a href="{{ url_for('auth.edit_profile') }}"><i class="fas fa-user"></i> View Profile</a></li>
+            <li><a href="{{ url_for('movie.watchlist') }}"><i class="fas fa-bookmark"></i> Watchlist</a></li>
+            <li><a href="{{ url_for('movie.favorites') }}"><i class="fas fa-heart"></i> Favorites</a></li>
+            <li><a href="{{ url_for('auth.logout') }}"><i class="fas fa-sign-out-alt"></i> Sign Out</a></li>
+          </ul>
+        </div>
+      </div>
+      {% else %}
+        {% if request.endpoint == 'auth.login' %}
+          <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-large">Join Now</a>
+        {% else %}
+          <a href="{{ url_for('auth.login') }}" class="btn btn-primary btn-large">Sign In</a>
+        {% endif %}
+      {% endif %}
+    </div>
+  </nav>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="notification-container">
+    {% for category, message in messages %}
+    <div class="notification notification-{{ category | default('info') }}">
+      <div class="notification-icon">
+        {% if category == 'success' %}
+        <i class="fas fa-check-circle"></i>
+        {% elif category == 'danger' %}
+        <i class="fas fa-exclamation-circle"></i>
+        {% elif category == 'warning' %}
+        <i class="fas fa-exclamation-triangle"></i>
+        {% else %}
+        <i class="fas fa-info-circle"></i>
+        {% endif %}
+      </div>
+      <span class="notification-message">
+        {{ message[:30] }}{% if message|length > 30 %}...{% endif %}
+      </span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <main class="content-wrapper">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  {% endblock %}
+
+  <script>
+    // Dropdown logic: Only one open at a time
+    document.addEventListener('DOMContentLoaded', () => {
+      // Search Dropdown
+      const searchToggle = document.getElementById('search-toggle');
+      const searchDropdown = document.querySelector('.search-dropdown');
+      const searchDropdownMenu = document.getElementById('search-dropdown-menu');
+      const searchInput = document.getElementById('search-input');
+
+      // User Dropdown
+      const userToggle = document.getElementById('user-toggle');
+      const userDropdown = document.querySelector('.user-dropdown');
+
+      // Open search, close user
+      searchToggle && searchToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        searchDropdown.classList.toggle('open');
+        if (searchDropdown.classList.contains('open')) {
+          userDropdown && userDropdown.classList.remove('open');
+          setTimeout(() => searchInput.focus(), 100);
+        }
+      });
+
+      // Open user, close search
+      userToggle && userToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('open');
+        if (userDropdown.classList.contains('open')) {
+          searchDropdown && searchDropdown.classList.remove('open');
+        }
+      });
+
+      // Close dropdowns on outside click
+      document.addEventListener('click', (e) => {
+        if (!searchDropdown.contains(e.target)) searchDropdown.classList.remove('open');
+        if (userDropdown && !userDropdown.contains(e.target)) userDropdown.classList.remove('open');
+      });
+
+      // Notification system with mutation observer
+      const notificationContainer = document.querySelector('.notification-container');
+      const handleNotifications = () => {
+        const notifications = document.querySelectorAll('.notification:not(.processed)');
+        notifications.forEach(notification => {
+          notification.classList.add('processed');
+          const removeNotification = () => {
+            notification.classList.add('fade-out-anim');
+            setTimeout(() => notification.remove(), 300);
+          };
+          let removalTimer = setTimeout(removeNotification, 2500);
+          notification.addEventListener('mouseenter', () => clearTimeout(removalTimer));
+          notification.addEventListener('mouseleave', () => {
+            removalTimer = setTimeout(removeNotification, 1500);
+          });
+        });
+      };
+      handleNotifications();
+      if (notificationContainer) {
+        const observer = new MutationObserver(() => handleNotifications());
+        observer.observe(notificationContainer, { childList: true, subtree: true });
+      }
+    });
+
+    // Autocomplete logic
+    const searchInput = document.getElementById('search-input');
+    const autocompleteList = document.getElementById('autocomplete-list');
+    const searchForm = document.getElementById('search-form');
+
+    searchInput && searchInput.addEventListener('input', function() {
+      const query = this.value;
+      if (query.length < 2) {
+        autocompleteList.innerHTML = '';
+        return;
+      }
+      fetch(`/autocomplete?q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(data => {
+          autocompleteList.innerHTML = '';
+          data.results.forEach(movie => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-item';
+            item.innerHTML = `
+              <img src="${movie.poster}" alt="" style="width:32px;height:48px;object-fit:cover;margin-right:8px;">
+              <span>${movie.title} <small>(${movie.year})</small></span>
+            `;
+            item.onclick = () => {
+              window.location.href = `/movie/details/${movie.id}`;
+            };
+            autocompleteList.appendChild(item);
+          });
+        });
+      setTimeout(adjustAutocompleteDirection, 10);
+    });
+
+    function adjustAutocompleteDirection() {
+      const form = document.getElementById('search-form');
+      const list = document.getElementById('autocomplete-list');
+      if (!form || !list || list.children.length === 0) return;
+      const rect = list.getBoundingClientRect();
+      const formRect = form.getBoundingClientRect();
+      const windowHeight = window.innerHeight || document.documentElement.clientHeight;
+      list.classList.remove('open-down');
+      if (formRect.top < rect.height + 40) {
+        list.classList.add('open-down');
+      }
+    }
+
+    window.addEventListener('resize', adjustAutocompleteDirection);
+    window.addEventListener('scroll', adjustAutocompleteDirection, true);
+
+    document.addEventListener('click', function(e) {
+      if (!autocompleteList.contains(e.target) && e.target !== searchInput) {
+        autocompleteList.innerHTML = '';
+      }
+    });
+
+    searchForm && searchForm.addEventListener('submit', function(e) {
+      if (autocompleteList.innerHTML !== '') {
+        e.preventDefault();
+        const query = searchInput.value;
+        window.location.href = `/search?q=${encodeURIComponent(query)}`;
+      }
+    });
+  </script>
+</body>
+
+</html>

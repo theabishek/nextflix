@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Register{% endblock %}
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/auth.css') }}">
+{% endblock %}
+{% block content %}
+<div class="auth-container">
+  <h1>Create an Account</h1>
+  <form method="POST" enctype="multipart/form-data" class="auth-form">
+    <div class="form-group">
+      <label for="name">Full Name *</label>
+      <input type="text" name="name" id="name" placeholder="Enter your full name" required>
+    </div>
+    <div class="form-group">
+      <label for="username">Username *</label>
+      <input type="text" name="username" id="username" placeholder="Choose a username" required>
+    </div>
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input type="email" name="email" id="email" placeholder="Enter your email address" required>
+    </div>
+    <div class="form-group">
+      <label for="password">Password *</label>
+      <input type="password" name="password" id="password" placeholder="Enter a strong password" required>
+    </div>
+    <div class="form-group">
+      <label>Select an Avatar *</label>
+      <div class="avatar-selection">
+        {% for i in range(1, 11) %}
+        <label>
+          <input type="radio" name="profile_pic" value="{{ url_for('static', filename='images/avatars/avatar' + i|string + '.png') }}" {% if i == 1 %}checked{% endif %}>
+          <img src="{{ url_for('static', filename='images/avatars/avatar' + i|string + '.png') }}" alt="Avatar {{ i }}" class="avatar">
+        </label>
+        {% endfor %}
+      </div>
+    </div>
+<!-- Change the phone input name to match your model -->
+<div class="form-group">
+  <label for="phone">Phone</label>
+  <input type="tel" name="phoneNumber" id="phone" placeholder="Optional">  <!-- Changed name to phoneNumber -->
+</div>
+
+<!-- Change the country input name to match your model -->
+<div class="form-group datalist-container">
+  <label for="country">Country *</label>
+  <input type="text" name="country" id="country" placeholder="Type your country..." required>
+</div>
+
+    <button type="submit" class="btnn btnn-primary">Register</button>
+  </form>
+  <p class="text-center">
+    Already have an account? <a href="{{ url_for('auth.login') }}">Login here</a>.
+  </p>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+  // Initialize the genres dropdown
+  $(document).ready(function () {
+    $('.selectpicker').selectpicker();
+  });
+</script>
+<script>
+  async function setDynamicBackground() {
+    try {
+      const response = await fetch('https://api.themoviedb.org/3/movie/popular?api_key=1a483b7f5ffd41254a97bd00fa4ee773&language=en-US&page=1');
+      const data = await response.json();
+      const movies = data.results;
+
+      if (movies.length > 0) {
+        const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+        const backdropPath = randomMovie.backdrop_path;
+        if (backdropPath) {
+          document.body.style.background = `url('https://image.tmdb.org/t/p/original${backdropPath}') no-repeat center center fixed`;
+          document.body.style.backgroundSize = 'cover';
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching TMDB background:', error);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', setDynamicBackground);
+</script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% endblock %}

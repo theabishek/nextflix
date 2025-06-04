@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Recommendations{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/recommend.css') }}">
+{% endblock %}
+
+{% block content %}
+<section class="hero" style="background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4));">
+    <div class="hero-content">
+        <div class="hero-text">
+            <h1 class="hero-quote">Smart Recommendations</h1>
+            <p class="hero-subtitle">Discover movies tailored to your taste and mood</p>
+
+            <div class="hero-buttons">
+                <!-- Search Form with suggestions -->
+                <form method="GET" action="{{ url_for('recommend.recommendations') }}" class="search-form"
+                    autocomplete="off">
+                    <input type="text" name="query" id="search-query" placeholder="Search movies..."
+                        value="{{ request.args.get('query', '') }}">
+                    <ul id="suggestions" class="suggestions-list"></ul>
+                    <button type="submit" class="btnn btnn-primary">
+                        <i class="fas fa-search"></i> Find Similar
+                    </button>
+                </form>
+
+                <form method="GET" action="{{ url_for('recommend.recommendations') }}" class="mood-form">
+                    <input type="text" name="user_input" placeholder="Describe your mood..."
+                        value="{{ request.args.get('user_input', '') }}">
+                    <button type="submit" class="btnn btnn-secondary">
+                        <i class="fas fa-smile"></i> Mood Picks
+                    </button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<div class="recommendations-container">
+    {% if recs %}
+    <section class="movie-section results">
+        <h2>{{ rec_type }}</h2>
+        <div class="movie-grid">
+            {% for movie in recs %}
+            <div class="movie-card">
+                <a href="{{ url_for('movie.movie_details', movie_id=movie.id) if movie.id else '#' }}">
+                    <div class="poster-container">
+                        {% if movie.poster_path %}
+                        <img data-src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}"
+                            alt="{{ movie.title }} poster" loading="lazy">
+                        {% else %}
+                        <div class="poster-placeholder">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-popup">
+                            <p>View Details</p>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3>{{ movie.title }}</h3>
+                        <div class="movie-meta">
+                            <span>{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
+                            <span>{{ "%.1f"|format(movie.vote_average / 2.0) if movie.vote_average else 'N/A' }} /
+                                5</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <section class="movie-section personalized">
+        <h2>Only For You</h2>
+        <div class="movie-grid">
+            {% for movie in personalized_recs %}
+            <div class="movie-card">
+                <a href="{{ url_for('movie.movie_details', movie_id=movie.id) if movie.id else '#' }}">
+                    <div class="poster-container">
+                        {% if movie.poster_path %}
+                        <img data-src="https://image.tmdb.org/t/p/w500{{ movie.poster_path }}"
+                            alt="{{ movie.title }} poster" loading="lazy">
+                        {% else %}
+                        <div class="poster-placeholder">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-popup">
+                            <p>View Details</p>
+                        </div>
+                    </div>
+                    <div class="movie-info">
+                        <h3>{{ movie.title }}</h3>
+                        <div class="movie-meta">
+                            <span>{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
+                            <span>{{ "%.1f"|format(movie.vote_average / 2.0) if movie.vote_average else 'N/A' }} /
+                                5</span>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block scripts %}
+// Complete corrected script
+<script type="module">
+    import { TMDB_API_KEY, TMDB_BASE_URL } from "{{ url_for('static', filename='js/main.js') }}";
+
+    // Search suggestions functionality
+    function initSearchSuggestions() {
+        const searchForm = document.querySelector('.search-form');
+        const searchInput = document.getElementById("search-query");
+        const suggestionsList = document.getElementById("suggestions");
+        let keepSuggestionsOpen = false;
+
+        async function fetchSuggestions(query) {
+            try {
+                const response = await fetch(
+                    `{{ url_for('recommend.search_suggestions') }}?q=${encodeURIComponent(query)}`
+                );
+                return await response.json();
+            } catch (error) {
+                console.error("Error fetching suggestions:", error);
+                return [];
+            }
+        }
+
+        function handleInput() {
+            const query = searchInput.value.trim();
+            suggestionsList.innerHTML = "";
+
+            if (query.length < 2) {
+                suggestionsList.classList.remove('visible');
+                return;
+            }
+
+            fetchSuggestions(query).then(suggestions => {
+                suggestions.forEach(movie => {
+                    const li = document.createElement("li");
+                    li.textContent = movie.title;
+                    // Add click handler directly to each list item
+                    li.addEventListener('click', () => {
+                        searchInput.value = movie.title;
+                        suggestionsList.classList.remove('visible');
+                        searchInput.focus();
+                    });
+                    suggestionsList.appendChild(li);
+                });
+                suggestionsList.classList.add('visible');
+            });
+        }
+
+        // Event Listeners
+        searchInput.addEventListener("input", handleInput);
+        searchInput.addEventListener("focus", () => searchInput.value && suggestionsList.classList.add('visible'));
+
+        suggestionsList.addEventListener('mouseenter', () => keepSuggestionsOpen = true);
+        suggestionsList.addEventListener('mouseleave', () => {
+            keepSuggestionsOpen = false;
+            if (!searchInput.matches(':focus')) {
+                suggestionsList.classList.remove('visible');
+            }
+        });
+
+        document.addEventListener("click", (event) => {
+            if (!searchForm.contains(event.target) && !keepSuggestionsOpen) {
+                suggestionsList.classList.remove('visible');
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') suggestionsList.classList.remove('visible');
+        });
+    }
+
+    // Lazy loading for posters
+    function initLazyLoading() {
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    if (img.dataset.src) {
+                        img.src = img.dataset.src;
+                        img.removeAttribute('data-src');
+                    }
+                    observer.unobserve(img);
+                }
+            });
+        });
+
+        document.querySelectorAll('img[data-src]').forEach(img => observer.observe(img));
+    }
+
+    // Random banner setup
+    async function setRandomBanner() {
+        try {
+            const response = await fetch(`${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}`);
+            const data = await response.json();
+            const movies = data.results.filter(m => m.backdrop_path);
+            const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+
+            if (randomMovie) {
+                document.querySelector('.hero').style.backgroundImage =
+                    `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)),
+            url('https://image.tmdb.org/t/p/original${randomMovie.backdrop_path}')`;
+            }
+        } catch (error) {
+            console.error("Error setting banner:", error);
+        }
+    }
+
+    // Initialize all functionality
+    document.addEventListener("DOMContentLoaded", () => {
+        initSearchSuggestions();
+        initLazyLoading();
+        setRandomBanner();
+    });
+</script>
+{% endblock %}

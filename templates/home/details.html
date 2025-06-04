@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}{{ movie.get('title', 'N/A') }}{% endblock %}
+
+{% block css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/details.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="details-container">
+    <!-- Movie Banner -->
+    <div class="movie-banner"
+        style="background-image: url(&quot;https://image.tmdb.org/t/p/original{{ movie.get('backdrop_path', '') }}&quot;);">
+        <div class="banner-overlay">
+            <div class="movie-header">
+                <h1 class="movie-title">
+                  {{ movie.get('title', 'N/A') }}
+                  <span>
+                    (
+                    {% if movie.get('release_date') %}
+                      {{ movie.get('release_date')[:4] }}
+                    {% else %}
+                      N/A
+                    {% endif %}
+                    )
+                  </span>
+                </h1>
+                <p class="tagline">{{ movie.get('tagline', 'No tagline available') }}</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Movie Information Section -->
+    <div class="movie-info-section">
+        <div class="movie-poster">
+            <img src="https://image.tmdb.org/t/p/w500{{ movie.get('poster_path', '') }}" alt="{{ movie.get('title', 'N/A') }}">
+        </div>
+
+        <div class="movie-details">
+            <h2>About the Movie</h2>
+            <p class="overview">{{ movie.get('overview', 'No overview available.') }}</p>
+
+            <div class="metadata-grid">
+                <div class="metadata-item">
+                    <strong>TMDB Rating</strong>
+                    <span>
+                        {% if movie.get('vote_average') is not none %}
+                            {{ (movie.get('vote_average', 0) / 2.0)|round(1) }} / 5
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Runtime</strong>
+                    <span>{{ movie.get('runtime', 'N/A') }} mins</span>
+                </div>
+                <div class="metadata-item">
+                    <strong>Release Date</strong>
+                    <span>{{ movie.get('release_date', 'N/A') }}</span>
+                </div>
+            </div>
+
+            <div class="info-list">
+                <div class="info-item">
+                    <strong>Genre:</strong>
+                    <span>
+                        {% if movie.get('genres') %}
+                            {{ movie.genres|join(', ') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="info-item">
+                    <strong>Director:</strong>
+                    <span>{{ movie.get('director', 'N/A') }}</span>
+                </div>
+                <div class="info-item">
+                    <strong>Cast:</strong>
+                    <span>
+                        {% if movie.get('cast') %}
+                            {{ movie.get('cast')|join(', ') }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+
+            {% if current_user.is_authenticated and movie.get('id') %}
+            <div class="action-buttons">
+                <div class="wide-buttons">
+                    <!-- Watchlist Button -->
+                    <form action="{{ url_for('movie.toggle_watchlist', movie_id=movie_id) }}" method="POST">
+                        <button class="btnn btnn-watchlist {% if movie_in_watchlist %}added{% endif %}" type="submit"
+                            aria-label="Watchlist">
+                            <i class="fas fa-bookmark"></i>
+                            {{ 'In Watchlist' if movie_in_watchlist else 'Watchlist' }}
+                        </button>
+                    </form>
+
+                    <!-- Favorite Button -->
+                    <form action="{{ url_for('movie.toggle_favorite', movie_id=movie_id) }}" method="POST">
+                        <button class="btnn btnn-favorite {% if movie_in_favorites %}added{% endif %}" type="submit"
+                            aria-label="Favorite">
+                            <i class="fas fa-heart"></i>
+                            {{ 'Favorited' if movie_in_favorites else 'Favorite' }}
+                        </button>
+                    </form>
+                </div>
+
+                <div class="narrow-buttons">
+                    <!-- Like Button -->
+                    <form action="{{ url_for('movie.like_movie', movie_id=movie_id) }}" method="POST">
+                        <button class="btnn btnn-like{% if user_like %} active{% endif %}" type="submit"
+                            aria-label="Like">
+                            <i class="fas fa-thumbs-up"></i>
+                        </button>
+                    </form>
+
+                    <!-- Dislike Button -->
+                    <form action="{{ url_for('movie.dislike_movie', movie_id=movie_id) }}" method="POST">
+                        <button class="btnn btnn-dislike{% if user_dislike %} active{% endif %}" type="submit"
+                            aria-label="Dislike">
+                            <i class="fas fa-thumbs-down"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% elif current_user.is_authenticated %}
+            <div class="action-buttons">
+                <p>Movie actions unavailable. No movie data found.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Trailer Section -->
+    <div class="trailer-section">
+        <h2>Watch the Trailer</h2>
+        {% if movie.get('trailer_key') %}
+        <div class="video-container">
+            <iframe src="https://www.youtube.com/embed/{{ movie.get('trailer_key') }}" frameborder="0"
+                allowfullscreen></iframe>
+        </div>
+        {% else %}
+        <p>No trailer available for this movie.</p>
+        {% endif %}
+    </div>
+
+    <div class="review-container">
+        <!-- Review Form Section (Only visible when logged in) -->
+        {% if current_user.is_authenticated %}
+        <div class="review-form-section">
+            <h2>Write a Review</h2>
+            <form action="{{ url_for('movie.submit_review', movie_id=movie_id) }}" method="POST">
+                <div class="rating-input">
+                    <div class="star-rating">
+                        {% for i in range(5, 0, -1) %}
+                        <input type="radio" id="star{{ i }}" name="rating" value="{{ i }}" required>
+                        <label for="star{{ i }}"><i class="fas fa-star"></i></label>
+                        {% endfor %}
+                    </div>
+                </div>
+                <textarea name="review" rows="3" placeholder="Share your thoughts about this movie..."
+                    required></textarea>
+                <button type="submit" class="btnn btnn-primary">Post Review</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Reviews List Section -->
+        <div class="reviews-section {% if not current_user.is_authenticated %}logged-out{% endif %}">
+            <h2>User Reviews</h2>
+            <div class="reviews-scroll-container">
+                {% if reviews %}
+                {% for review in reviews %}
+                <div class="review-card">
+                    <img src="{{ url_for('static', filename='images/avatars/' + review.user.profile_pic) if review.user.profile_pic else url_for('static', filename='images/avatars/default.png') }}"
+                        alt="{{ review.user.name }}" class="review-avatar">
+                    <div class="review-content">
+                        <div class="review-header">
+                            <h4>{{ review.user.name }}</h4>
+                            {% if current_user.is_authenticated and review.user_id == current_user.get_id() %}
+                            <form action="{{ url_for('movie.delete_review', review_id=review._id) }}" method="POST">
+                                <button type="submit" class="btnn btnn-icon">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
+                        <div class="review-stars">
+                            {% for i in range(review.rating) %}
+                            <i class="fas fa-star"></i>
+                            {% endfor %}
+                        </div>
+                        <p class="review-text">{{ review.review }}</p>
+                        <small>{{ review.timestamp.strftime('%b %d, %Y %H:%M') }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <p class="no-reviews">No reviews yet. Be the first to review!</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recommendations Section -->
+    <section class="movie-section recommendation">
+        <h2>Similar Movies</h2>
+        <div class="movie-grid">
+            {% for rec in recommendations %}
+            <div class="movie-card">
+                <a href="{{ url_for('movie.movie_details', movie_id=rec.get('id')) }}">
+                    <div class="poster-container">
+                        <img src="https://image.tmdb.org/t/p/w300{{ rec.get('poster_path', '') }}" alt="{{ rec.get('title', 'N/A') }}">
+                    </div>
+                    <div class="movie-info">
+                        <h3>{{ rec.get('title', 'N/A') }}</h3>
+                        <div class="movie-meta">
+                            <span>
+                                {% if rec.get('release_date') %}
+                                    {{ rec.get('release_date')[:4] }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                            <span>
+                                {% if rec.get('vote_average') is not none %}
+                                    {{ (rec.get('vote_average', 0) / 2.0)|round(1) }} / 5
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="card-popup">
+                        <p>View Details</p>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
