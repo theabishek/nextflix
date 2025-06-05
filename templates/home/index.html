@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block content %}
-<section class="hero" style="background-image: url('path-to-your-background-image.jpg');">
+<section class="hero">
   <div class="hero-content">
     <div class="hero-text">
       <h1 class="hero-quote">NEXTFLIX</h1>
@@ -64,6 +64,9 @@
     const apiUrl = `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=2`;
     try {
       const response = await fetch(apiUrl);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
       const data = await response.json();
       const movies = data.results;
       const randomMovie = movies[Math.floor(Math.random() * movies.length)];
@@ -90,6 +93,9 @@
 
     } catch (error) {
       console.error("Error fetching random movie banner:", error);
+      // Set fallback background image
+      const heroElement = document.querySelector(".hero");
+      heroElement.style.backgroundImage = `url('{{ url_for('static', filename='images/default-banner.png') }}')`;
     }
   }
 
