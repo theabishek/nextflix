@@ -1,10 +1,10 @@
 import os
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, current_app
 from flask_login import login_required, current_user
-import pandas as pd
-import requests
 from functools import lru_cache
 from dotenv import load_dotenv
+import requests
+import pandas as pd
 import joblib
 from .utils import clean_text
 
@@ -64,6 +64,8 @@ def load_models():
         movies_df = pd.read_csv(MOVIE_METADATA_CSV_PATH)
         movies_df["title_lower"] = movies_df["title"].str.lower()
         title_to_index = pd.Series(movies_df.index.values, index=movies_df["title_lower"]).to_dict()
+
+    if tmdb_session is None:
         tmdb_session = requests.Session()
 
     return
@@ -207,7 +209,7 @@ def recommendations():
         content_movies = get_content_recommendations(search_query, n=10)
         content_recs = [enhance_movie_data(m) for m in content_movies]
         main_recs = [m for m in content_recs if m.get("poster_path")]
-        rec_type = f"Similar to '{search_query}'"
+
 
     return render_template(
         "home/recommendations.html",
@@ -216,5 +218,8 @@ def recommendations():
         rec_type=rec_type,
         emotion=detected_emotion,
         search_query=search_query,
-        user_input=user_input
+        user_input=user_input,
+        TMDB_API_KEY=TMDB_API_KEY,  # Pass TMDB_API_KEY to the template
+        TMDB_BASE_URL=TMDB_BASE_URL,  # Pass TMDB_BASE_URL to the template
+        TMDB_IMAGE_BASE=TMDB_IMAGE_BASE  # Pass TMDB_IMAGE_BASE to the template
     )

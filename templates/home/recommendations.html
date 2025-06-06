@@ -123,9 +123,9 @@
 {% block scripts %}
 <script>
     // Pull TMDB constants from Flask config (loaded from .env)
-    const TMDB_API_KEY   = "{{ config['TMDB_API_KEY'] }}";
-    const TMDB_BASE_URL  = "{{ config['TMDB_BASE_URL'] }}";
-    const TMDB_IMAGE_BASE= "{{ config['TMDB_IMAGE_BASE'] }}";
+    const TMDB_API_KEY   = "{{ TMDB_API_KEY }}";
+    const TMDB_BASE_URL  = "{{ TMDB_BASE_URL }}";
+    const TMDB_IMAGE_BASE= "{{ TMDB_IMAGE_BASE }}";
 
     // Debounce helper to limit API calls
     function debounce(fn, delay) {
@@ -217,15 +217,48 @@
         // Set a random hero banner from TMDB popular movies
         async function setRandomBanner() {
             try {
+                if (!TMDB_API_KEY || !TMDB_BASE_URL) {
+                    console.error("TMDB configuration is missing. Check your Flask config.");
+                    return;
+                }
+
                 const response = await fetch(`${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}`);
-                if (!response.ok) throw new Error("Failed to fetch popular movies");
+                if (!response.ok) {
+                    console.error("Failed to fetch popular movies. Status:", response.status);
+                    return;
+                }
+
                 const data = await response.json();
+                if (!data || !data.results) {
+                    console.error("Invalid data received from TMDB:", data);
+                    return;
+                }
+
+                // Use only movies with a backdrop_path
                 const movies = data.results.filter(m => m.backdrop_path);
-                if (!movies.length) return;
+                if (!movies.length) {
+                    console.warn("No movies with backdrop_path found in TMDB response.");
+                    return;
+                }
+
                 const randomMovie = movies[Math.floor(Math.random() * movies.length)];
                 const backdrop = randomMovie.backdrop_path;
-                document.querySelector(".hero").style.backgroundImage =
-                    `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('${TMDB_IMAGE_BASE}${backdrop}')`;
+                if (!backdrop) {
+                    console.warn("Movie object missing backdrop_path.");
+                    return;
+                }
+
+                const heroElement = document.querySelector(".hero");
+                if (!heroElement) {
+                    console.error("Hero element not found in the DOM.");
+                    return;
+                }
+
+                // Use original quality for the banner
+                const imageUrl = `https://image.tmdb.org/t/p/original${backdrop}`;
+                heroElement.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.4)), url('${imageUrl}')`;
+                heroElement.style.backgroundSize = 'cover';
+                heroElement.style.backgroundPosition = 'center';
             } catch (error) {
                 console.error("Error setting banner:", error);
             }
