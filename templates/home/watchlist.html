@@ -12,12 +12,14 @@
     {% if cards %}
       {% for movie in cards %}
         <div class="movie-card">
-          <a href="{{ url_for('movie.movie_details', movie_id=movie.id) }}">
+          <!-- Pass both item_type and item_id -->
+          <a href="{{ url_for('movie.movie_details', item_type=movie.type, item_id=movie.id) }}">
             <div class="poster-container">
               {% if movie.poster_path %}
                 <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
               {% else %}
-                <img src="{{ url_for('static', filename='images/poster-placeholder.png') }}" alt="No poster available">
+                <img src="{{ url_for('static', filename='images/poster-placeholder.png') }}"
+                     alt="No poster available">
               {% endif %}
             </div>
             <div class="movie-info">

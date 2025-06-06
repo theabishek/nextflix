@@ -1,17 +1,30 @@
+import os
 from flask import Blueprint, render_template, request, jsonify
 from flask_login import login_required, current_user
-import pickle
 import pandas as pd
 import requests
+from functools import lru_cache
+from dotenv import load_dotenv
+import joblib
 from .utils import clean_text
+
+# Load environment variables
+load_dotenv()
 
 recommend_bp = Blueprint("recommend", __name__, url_prefix="/recommend")
 
-# TMDB configuration
-TMDB_API_KEY = "1a483b7f5ffd41254a97bd00fa4ee773"
-TMDB_BASE_URL = "https://api.themoviedb.org/3"
+# ── TMDB configuration from .env ─────────────────────────────────────────────────
+TMDB_API_KEY    = os.getenv("TMDB_API_KEY", "")
+TMDB_BASE_URL   = os.getenv("TMDB_BASE_URL", "https://api.themoviedb.org/3")
+TMDB_IMAGE_BASE = os.getenv("TMDB_IMAGE_BASE", "https://image.tmdb.org/t/p/w500")
 
-# Emotion-to-genre mapping
+# Model file paths (from .env or defaults)
+EMOTION_MODEL_PATH       = os.getenv("EMOTION_MODEL_PATH",       "emotion_classifier.joblib")
+CONTENT_SIM_PATH         = os.getenv("CONTENT_SIM_PATH",         "content_similarity.joblib")
+COLLABORATIVE_MODEL_PATH = os.getenv("COLLABORATIVE_MODEL_PATH", "collaborative_filtering.joblib")
+MOVIE_METADATA_CSV_PATH  = os.getenv("MOVIE_METADATA_CSV_PATH",  "movie_metadata.csv")
+
+# Emotion ↔ Genre mapping (used for labeling only)
 EMOTION_GENRE_MAP = {
     "joy": ["Comedy", "Musical", "Family", "Animation"],
     "sadness": ["Drama", "Romance", "Music"],
@@ -23,182 +36,185 @@ EMOTION_GENRE_MAP = {
     "trust": ["Drama", "Romance", "Family", "History"]
 }
 
-# Global variables for models and CSV data
-emotion_model = None
-content_sim = None
-svd_model = None
-movies_df = None
+# ── Globals (loaded once) ────────────────────────────────────────────────────────
+emotion_model  = None
+content_sim    = None
+svd_model      = None
+movies_df      = None
+title_to_index = None
+tmdb_session   = None
 
 def load_models():
-    global emotion_model, content_sim, svd_model, movies_df
+    """
+    Load or reuse all models and movie metadata. Uses memory-mapping for content_similarity.
+    """
+    global emotion_model, content_sim, svd_model, movies_df, title_to_index, tmdb_session
+
     if emotion_model is None:
-        with open("models/emotion_classifier.pkl", "rb") as f:
-            emotion_model = pickle.load(f)
+        emotion_model = joblib.load(EMOTION_MODEL_PATH)
+
     if content_sim is None:
-        with open("models/content_similarity.pkl", "rb") as f:
-            content_sim = pickle.load(f)
+        # memory-map the float32 similarity array
+        content_sim = joblib.load(CONTENT_SIM_PATH, mmap_mode="r")
+
     if svd_model is None:
-        with open("models/collaborative_filtering.pkl", "rb") as f:
-            svd_model = pickle.load(f)
+        svd_model = joblib.load(COLLABORATIVE_MODEL_PATH)
+
     if movies_df is None:
-        movies_df = pd.read_csv("models/movie_metadata.csv")
-        required_columns = ['id', 'title', 'poster_path', 'vote_average', 'release_date', 'genres']
-        for col in required_columns:
-            if col not in movies_df.columns:
-                movies_df[col] = None
-        # We ignore the CSV poster_path (force it to an empty string) so we always use TMDB id.
-        movies_df['poster_path'] = ""
+        movies_df = pd.read_csv(MOVIE_METADATA_CSV_PATH)
+        movies_df["title_lower"] = movies_df["title"].str.lower()
+        title_to_index = pd.Series(movies_df.index.values, index=movies_df["title_lower"]).to_dict()
+        tmdb_session = requests.Session()
+
     return
 
-def get_poster_by_tmdb_id(tmdb_id):
-    """Fetch the poster path from TMDB given the movie’s TMDB id."""
-    try:
-        response = requests.get(
-            f"{TMDB_BASE_URL}/movie/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        )
-        if response.status_code == 200:
-            data = response.json()
-            poster_path = data.get("poster_path", "")
-            if poster_path and not poster_path.startswith("/"):
-                poster_path = "/" + poster_path
-            return poster_path
-    except Exception as e:
-        print(f"Error fetching poster for TMDB id {tmdb_id}: {e}")
-    return ""
-
-def get_movie_details_from_tmdb(tmdb_id):
-    """Fetch complete movie details from TMDB using the movie's id."""
-    try:
-        response = requests.get(
-            f"{TMDB_BASE_URL}/movie/{tmdb_id}",
-            params={"api_key": TMDB_API_KEY}
-        )
-        if response.status_code == 200:
-            data = response.json()
-            poster_path = data.get("poster_path", "")
-            if poster_path and not poster_path.startswith("/"):
-                poster_path = "/" + poster_path
-            return {
-                "id": data.get("id"),
-                "title": data.get("title"),
-                "poster_path": poster_path,
-                "vote_average": data.get("vote_average", 0),
-                "release_date": data.get("release_date", ""),
-                "genres": [g["name"] for g in data.get("genres", [])],
-                "overview": data.get("overview", "")
-            }
-    except Exception as e:
-        print(f"Error fetching details for TMDB id {tmdb_id}: {e}")
-    return None
-
-def enhance_movie_data(movie):
+@lru_cache(maxsize=1024)
+def get_movie_details_from_tmdb(tmdb_id: int) -> dict:
     """
-    Enhance the movie dictionary by overriding the poster_path with the TMDB API value.
-    Also updates genres, vote_average, and release_date if missing.
+    Fetch full details from TMDB for a given movie ID.
+    Caches up to 1024 unique IDs to avoid repeated HTTP calls.
+    """
+    try:
+        resp = tmdb_session.get(
+            f"{TMDB_BASE_URL}/movie/{tmdb_id}",
+            params={"api_key": TMDB_API_KEY}
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        poster = data.get("poster_path") or ""
+        if poster and not poster.startswith("/"):
+            poster = "/" + poster
+        return {
+            "id": data.get("id"),
+            "title": data.get("title", ""),
+            "poster_path": TMDB_IMAGE_BASE + poster if poster else "",
+            "vote_average": data.get("vote_average", 0.0),
+            "release_date": data.get("release_date", "") or "",
+            "genres": [g["name"] for g in data.get("genres", [])],
+            "overview": data.get("overview", "") or ""
+        }
+    except Exception:
+        return None
+
+def enhance_movie_data(movie: dict) -> dict:
+    """
+    Merge stored metadata with TMDB-fetched details if possible.
+    If TMDB fails, fallback to minimal stored info (title + ID).
     """
     tmdb_id = movie.get("id")
     if tmdb_id:
-        poster = get_poster_by_tmdb_id(tmdb_id)
-        movie["poster_path"] = poster
-        if not movie.get("genres") or not movie.get("release_date"):
-            tmdb_data = get_movie_details_from_tmdb(tmdb_id)
-            if tmdb_data:
-                movie["genres"] = tmdb_data.get("genres")
-                movie["vote_average"] = tmdb_data.get("vote_average")
-                movie["release_date"] = tmdb_data.get("release_date")
-    return movie
+        tmdb_info = get_movie_details_from_tmdb(tmdb_id)
+        if tmdb_info:
+            return tmdb_info
+    return {
+        "id": movie.get("id"),
+        "title": movie.get("title", ""),
+        "poster_path": "",
+        "vote_average": 0.0,
+        "release_date": "",
+        "genres": [],
+        "overview": ""
+    }
 
-def get_content_recommendations(movie_title, n=5):
+def get_content_recommendations(movie_title: str, n: int = 5) -> list:
+    """
+    Look up movie_title → index. Use memory-mapped content_sim to pick top-n similar.
+    If title not found, return random sample of n.
+    """
     load_models()
-    try:
-        idx = movies_df[movies_df["title"].str.lower() == movie_title.lower()].index[0]
-        sim_scores = list(enumerate(content_sim[idx]))
-        sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-        recommended_idxs = [i[0] for i in sim_scores[1:n+1]]
-        return movies_df.iloc[recommended_idxs].to_dict("records")
-    except Exception as e:
-        print(f"Content recommendation error: {e}")
+    idx = title_to_index.get(movie_title.lower())
+    if idx is None:
         return movies_df.sample(n).to_dict("records")
 
-def get_emotion_recommendations(user_input, n=5):
-    load_models()
-    cleaned_input = clean_text(user_input)
-    detected_emotion = emotion_model.predict([cleaned_input])[0]
-    recommended_genres = EMOTION_GENRE_MAP.get(detected_emotion, ["Popular"])
-    if 'genres' in movies_df.columns:
-        genre_filtered = movies_df[movies_df["genres"].apply(
-            lambda x: any(genre in x for genre in recommended_genres) if isinstance(x, str) else False
-        )]
-    else:
-        genre_filtered = movies_df
-    if len(genre_filtered) < n:
-        genre_filtered = movies_df
-    return genre_filtered.sample(n).to_dict("records")
+    sim_scores = content_sim[idx]  # memory-mapped float32 array
+    top_indices = (-sim_scores).argsort()[1 : n+1]
+    return movies_df.iloc[top_indices].to_dict("records")
 
-def get_top_collaborative_recommendations(user_id, n=5):
+def get_emotion_recommendations(user_input: str, n: int = 5) -> tuple[str, list]:
+    """
+    Predict emotion from user_input. Then sample n random movies (genre filtering unsupported without 'genres' column).
+    Returns (detected_emotion, [movie_dicts]).
+    """
+    load_models()
+    cleaned = clean_text(user_input)
+    detected_emotion = emotion_model.predict([cleaned])[0]
+    recommendations = movies_df.sample(n).to_dict("records")
+    return detected_emotion, recommendations
+
+def get_top_collaborative_recommendations(user_id, n: int = 5) -> list:
+    """
+    Predict ratings for all movies in movies_df using the memory-loaded SVD, return top-n.
+    """
     load_models()
     try:
-        if not isinstance(user_id, int):
-            user_id = hash(user_id) % 10000
-        movies_df["predicted_rating"] = movies_df["id"].apply(
-            lambda mid: svd_model.predict(user_id, mid).est
-        )
-        top_movies = movies_df.sort_values("predicted_rating", ascending=False).head(n)
-        recs = top_movies.to_dict("records")
-        return recs
-    except Exception as e:
-        print(f"Collaborative filtering error: {e}")
-        return movies_df.sample(n).to_dict("records")
-    finally:
-        if "predicted_rating" in movies_df.columns:
-            movies_df.drop("predicted_rating", axis=1, inplace=True)
+        uid = int(user_id)
+    except:
+        uid = abs(hash(user_id)) % 100_000
 
-# NEW: Endpoint for search suggestions.
+    preds = []
+    for idx, row in movies_df.iterrows():
+        mid = row["id"]
+        est = svd_model.predict(uid, mid).est
+        preds.append((idx, est))
+
+    top_indices = sorted(preds, key=lambda x: x[1], reverse=True)[:n]
+    indices = [i for i, _ in top_indices]
+    return movies_df.iloc[indices].to_dict("records")
+
 @recommend_bp.route("/search_suggestions", methods=["GET"])
 def search_suggestions():
+    """
+    Return up to 10 title suggestions matching query substring (case-insensitive).
+    """
     load_models()
-    query = request.args.get("q", "")
+    query = request.args.get("q", "").strip().lower()
     suggestions = []
     if query:
-        filtered = movies_df[movies_df["title"].str.contains(query, case=False, na=False)]
-        for _, row in filtered.head(10).iterrows():
-            suggestions.append({"id": row["id"], "title": row["title"]})
+        mask = movies_df["title_lower"].str.contains(query, na=False)
+        filtered = movies_df.loc[mask, ["id", "title"]].head(10)
+        suggestions = filtered.to_dict("records")
     return jsonify(suggestions)
 
 @recommend_bp.route("/", methods=["GET"])
 @login_required
 def recommendations():
+    """
+    Renders the recommendations page. Two sections:
+    1) "results" block if mood/query-based (rec_type != "Only For You")
+    2) Always show "Only For You" personalized recommendations below.
+    """
     load_models()
+
+    # 1) Personalized "Only For You" from collaborative filtering
     personalized_raw = get_top_collaborative_recommendations(current_user.id, n=10)
     personalized_recs = [enhance_movie_data(m) for m in personalized_raw]
+    # Filter out any with missing poster_path
+    personalized_recs = [m for m in personalized_recs if m.get("poster_path")]
 
+    # 2) Determine if mood-based or query-based
     main_recs = []
     rec_type = "Only For You"
-    emotion = None
-    genres = []
+    detected_emotion = None
+    search_query = request.args.get("query", "").strip()
+    user_input = request.args.get("user_input", "").strip()
 
-    search_query = request.args.get("query")
-    user_input = request.args.get("user_input")
     if user_input:
-        cleaned_input = clean_text(user_input)
-        emotion = emotion_model.predict([cleaned_input])[0]
-        genres = EMOTION_GENRE_MAP.get(emotion, ["Popular"])
-        main_raw = get_emotion_recommendations(cleaned_input, n=10)
-        main_recs = [enhance_movie_data(m) for m in main_raw]
-        # Append the genre names in brackets to the heading.
-        rec_type = f"{emotion.capitalize()} Recommendations ({', '.join(genres)})"
+        detected_emotion, emo_movies = get_emotion_recommendations(user_input, n=10)
+        emo_recs = [enhance_movie_data(m) for m in emo_movies]
+        main_recs = [m for m in emo_recs if m.get("poster_path")]
+        rec_type = f"{detected_emotion.capitalize()} Recommendations"
     elif search_query:
-        main_raw = get_content_recommendations(search_query, n=10)
-        main_recs = [enhance_movie_data(m) for m in main_raw]
+        content_movies = get_content_recommendations(search_query, n=10)
+        content_recs = [enhance_movie_data(m) for m in content_movies]
+        main_recs = [m for m in content_recs if m.get("poster_path")]
         rec_type = f"Similar to '{search_query}'"
+
     return render_template(
         "home/recommendations.html",
         recs=main_recs,
         personalized_recs=personalized_recs,
         rec_type=rec_type,
-        emotion=emotion,
-        genres=genres,
-        search_query=search_query or "",
-        user_input=user_input or ""
+        emotion=detected_emotion,
+        search_query=search_query,
+        user_input=user_input
     )

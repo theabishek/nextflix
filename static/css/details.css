@@ -1,3 +1,6 @@
+/* ===================================================================== */
+/*                          Core (Normal-View) CSS                        */
+/*  –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––  */
 /* Root & Global Reset */
 :root {
   --primary: #e50914;
@@ -5,6 +8,8 @@
   --dark-alt: #222;
   --light: #fff;
   --gray: #808080;
+  --text: #f4f4f4;
+  --text-secondary: #ccc;
   --transition: all 0.3s ease;
 }
 
@@ -18,6 +23,7 @@ body {
   background-color: var(--dark);
   color: var(--light);
   line-height: 1.4;
+  font-family: 'Montserrat', sans-serif;
 }
 
 a {
@@ -31,7 +37,7 @@ a {
   height: 70vh;
   min-height: 400px;
   background-size: cover;
-  background-position: center;
+  background-position: center 30%;
   position: relative;
   animation: fadeIn 1s ease-in;
 }
@@ -75,7 +81,6 @@ a {
   font-size: 1.2rem;
   font-style: italic;
   color: var(--gray);
-  max-width: 600px;
 }
 
 /* Movie Info */
@@ -96,9 +101,11 @@ a {
   transition: transform 0.3s ease;
   max-height: min-content;
 }
+
 .movie-poster:hover {
   transform: scale(1.03);
 }
+
 .movie-poster img {
   width: 100%;
   height: auto;
@@ -142,11 +149,11 @@ a {
   background: rgba(255, 255, 255, 0.05);
   padding: 1rem;
   border-radius: 8px;
-  border-left: 3px solid #e50914;
+  border-left: 3px solid var(--primary);
 }
 
 .metadata-item strong {
-  color: #e50914;
+  color: var(--primary);
   font-size: 0.9rem;
   display: block;
   margin-bottom: 0.5rem;
@@ -171,7 +178,7 @@ a {
 }
 
 .info-item strong {
-  color: #e50914;
+  color: var(--primary);
   margin-right: 0.5rem;
 }
 
@@ -189,6 +196,7 @@ a {
   flex: 1;
   gap: 1rem;
 }
+
 .wide-buttons form {
   flex: 1;
 }
@@ -208,12 +216,14 @@ a {
   font-size: 16px;
   border-radius: 4px;
   font-family: 'Montserrat', sans-serif;
-  transition: background-color var(--transition-speed);
+  transition: background-color var(--transition);
+  background: var(--gray);
+  color: var(--light);
 }
 
 /* Watchlist & Favorite Buttons */
 .btnn-watchlist {
-  background: #e50914;
+  background: var(--primary);
   color: white;
   width: 100%;
 }
@@ -222,7 +232,7 @@ a {
 }
 
 .btnn-favorite {
-  background: #e50914;
+  background: var(--primary);
   color: white;
   width: 100%;
 }
@@ -236,14 +246,17 @@ a {
   padding: 0.6rem 1rem;
   background: #474747;
   color: rgba(255, 255, 255, 0.7);
+  border: 2px solid transparent;
+  border-radius: 4px;
+  font-size: 1rem;
 }
 
-.btnn-like.added {
+.btnn-like.active {
   border-color: #00e676;
   color: #00e676;
 }
 
-.btnn-dislike.added {
+.btnn-dislike.active {
   border-color: #ff5252;
   color: #ff5252;
 }
@@ -251,20 +264,18 @@ a {
 /* Explicitly style icons inside active like/dislike to inherit the new color */
 .btnn-like.active i {
   color: #00e676;
-  background-color: #00e676;
 }
 
 .btnn-dislike.active i {
   color: #ff5252;
-  background-color: #ff5252;
 }
 
 /* Hover states for buttons */
 .btnn-watchlist:hover {
-  background: rgba(229, 9, 20, 0.1);
+  background: rgba(229, 9, 20, 0.8);
 }
 .btnn-favorite:hover {
-  background: rgba(229, 9, 20, 0.1);
+  background: rgba(229, 9, 20, 0.8);
 }
 .btnn-like:hover,
 .btnn-dislike:hover {
@@ -276,6 +287,7 @@ a {
   max-width: 1250px;
   margin: 3rem auto;
 }
+
 .trailer-section h2 {
   font-size: 1.8rem;
   margin: 0 0 20px 0;
@@ -302,6 +314,7 @@ a {
   overflow: hidden;
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
 }
+
 .video-container iframe {
   position: absolute;
   top: 0;
@@ -311,11 +324,12 @@ a {
   border: none;
 }
 
-/* Movie Section */
+/* Movie Section (Recommendations) */
 .movie-section {
   margin: 3rem auto;
   max-width: 1250px;
 }
+
 .movie-section h2 {
   font-size: 1.8rem;
   margin: 0 0 20px 0;
@@ -324,6 +338,7 @@ a {
   position: relative;
   padding-left: 30px;
 }
+
 .movie-section h2::before {
   content: "";
   position: absolute;
@@ -341,6 +356,7 @@ a {
   gap: 20px;
   margin: 0 auto;
 }
+
 @media (min-width: 1024px) {
   .movie-grid {
     grid-template-columns: repeat(5, 1fr);
@@ -357,6 +373,7 @@ a {
     transform: translateY(0) scale(1);
   }
 }
+
 .movie-card {
   position: relative;
   background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(40, 40, 40, 0.9) 100%);
@@ -397,6 +414,7 @@ a {
   visibility: hidden;
   transition: all 0.3s ease-out;
 }
+
 .movie-card:hover .card-popup {
   opacity: 1;
   visibility: visible;
@@ -409,89 +427,24 @@ a {
   display: block;
   object-fit: cover;
 }
+
 .movie-info {
   padding: 12px;
   text-align: left;
 }
+
 .movie-info h3 {
   font-size: 1.15rem;
   margin-bottom: 8px;
   color: var(--text);
   font-family: 'Montserrat', sans-serif;
 }
+
 .movie-meta {
   display: flex;
   justify-content: space-between;
   font-size: 0.9rem;
   color: var(--text-secondary);
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .hero {
-    min-height: 50vh;
-    padding: 1rem;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-  }
-  .hero-content {
-    max-width: 90%;
-  }
-  .hero-content h1 {
-    font-size: 2.5rem;
-    margin-bottom: 0.3rem;
-  }
-  .hero-content p {
-    font-size: 1rem;
-    margin-bottom: 1rem;
-  }
-  .movie-grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-}
-
-@media (max-width: 1024px) {
-  .movie-info-section {
-    grid-template-columns: 1fr;
-    margin-top: -50px;
-  }
-  .movie-poster {
-    max-width: 250px;
-    margin: 0 auto;
-  }
-}
-@media (max-width: 768px) {
-  .movie-title {
-    font-size: 2.5rem;
-  }
-  .movie-info-section {
-    padding: 1rem;
-  }
-  .metadata-grid {
-    grid-template-columns: 1fr;
-  }
-  .action-buttons {
-    flex-direction: column;
-  }
-  .recommendations-grid {
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  }
-}
-@media (max-width: 480px) {
-  .movie-banner {
-    height: 50vh;
-  }
-  .movie-title {
-    font-size: 2rem;
-  }
-  .trailer-section,
-  .recommendations-section {
-    padding: 0 1rem;
-  }
-  .recommendation-card img {
-    height: 200px;
-  }
 }
 
 /* ================= Review Section - Modern Redesign ================= */
@@ -749,34 +702,140 @@ a {
   margin-right: 3px;
 }
 
-/* Responsive Design (Default for Mobile) */
-@media (max-width: 768px) {
-  .reviews-scroll-container {
-    max-height: none;
-    height: auto;
-    flex-direction: column;
-  }
-  
-  .review-container {
-    padding: 1.5rem;
-    gap: 2rem;
-  }
-  
-  .review-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  
-  .review-avatar {
-    width: 40px;
-    height: 40px;
-  }
-}
-
 /* Utility */
 .text-primary {
   color: var(--primary);
 }
+
 .hidden {
   display: none;
+}
+
+
+/* ===================================================================== */
+/*                            Responsive CSS                             */
+/*  –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––  */
+
+/* 1) Tablet & small-desktop (below 1024px) */
+@media (max-width: 1024px) {
+  /* Stack poster + details vertically */
+  .movie-info-section {
+    grid-template-columns: 1fr;
+    margin-top: -50px;
+  }
+  .movie-poster {
+    max-width: 250px;
+    margin: 0 auto;
+  }
+}
+
+/* 2) Large phones / small tablets (below 768px) */
+@media (max-width: 768px) {
+  /* Shrink banner text & center */
+  .movie-banner {
+    height: 50vh;
+    padding: 1rem;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  .movie-header {
+    padding: 2% 1%;
+  }
+  .movie-title {
+    font-size: 2.5rem;
+  }
+  .tagline {
+    font-size: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Change grid to single column */
+  .movie-info-section {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+  .metadata-grid {
+    grid-template-columns: 1fr;
+  }
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  /* Recommendations grid narrower */
+  .movie-grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  /* Reviews layout stacks */
+  .review-container {
+    grid-template-columns: 1fr;
+    padding: 1.5rem;
+    gap: 2rem;
+  }
+  .review-form-section {
+    display: none; /* Make review form non-sticky & appear above reviews */
+  }
+  .reviews-section {
+    width: 100%;
+  }
+}
+
+/* 3) Small phones (below 480px) */
+@media (max-width: 480px) {
+  .movie-banner {
+    height: 40vh;
+  }
+  .movie-title {
+    font-size: 2rem;
+  }
+  .trailer-section,
+  .recommendation {
+    padding: 0 1rem;
+  }
+  .movie-grid {
+    gap: 12px;
+  }
+  .movie-card {
+    border: 1px solid rgba(255, 255, 255, 0.07);
+  }
+  .movie-info-section {
+    margin-top: -30px;
+  }
+  .metadata-grid {
+    gap: 0.8rem;
+  }
+  .metadata-item {
+    padding: 0.8rem;
+  }
+  .movie-details {
+    padding: 1rem;
+  }
+  .action-buttons {
+    gap: 0.5rem;
+  }
+  .btnn {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+
+  /* Reviews adjustments */
+  .reviews-scroll-container {
+    height: auto;
+  }
+  .review-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .review-avatar {
+    width: 40px;
+    height: 40px;
+  }
+  .review-text {
+    font-size: 0.9rem;
+  }
+  .review-container {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
 }

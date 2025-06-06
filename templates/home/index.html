@@ -1,3 +1,4 @@
+{# templates/home/index.html #}
 {% extends "base.html" %}
 {% block title %}Home{% endblock %}
 
@@ -6,100 +7,122 @@
 {% endblock %}
 
 {% block content %}
-<section class="hero">
-  <div class="hero-content">
-    <div class="hero-text">
-      <h1 class="hero-quote">NEXTFLIX</h1>
-      <p class="hero-subtitle">Personalized movie recommendations that match your unique taste.</p>
-      <div class="hero-buttons">
-        {% if not current_user.is_authenticated %}
-        <a href="{{ url_for('auth.register') }}" class="btnn btnn-primary">Join Now</a>
-        <a href="{{ url_for('auth.login') }}" class="btnn btnn-secondary">Login</a>
-        {% else %}
-        <a href="{{ url_for('recommend.recommendations') }}" class="btnn btnn-primary">Get Recommendations</a>
+  <!-- Hero Section -->
+  <section class="hero" style="background-image: url('path-to-your-background-image.jpg');">
+    <div class="hero-content">
+      <div class="hero-text">
+        <h1 class="hero-quote">NEXTFLIX</h1>
+        <p class="hero-subtitle">
+          Personalized movie & TV recommendations that match your unique taste.
+        </p>
+        <div class="hero-buttons">
+          {% if not current_user.is_authenticated %}
+            <a href="{{ url_for('auth.register') }}" class="btnn btnn-primary">Join Now</a>
+            <a href="{{ url_for('auth.login') }}" class="btnn btnn-secondary">Login</a>
+          {% else %}
+            <a href="{{ url_for('recommend.recommendations') }}" class="btnn btnn-primary">Get Recommendations</a>
+          {% endif %}
+        </div>
+      </div>
 
-        {% endif %}
+      <div class="movie-title">
+        <h4></h4>
+        <h3></h3>
       </div>
     </div>
+  </section>
 
-    <div class="movie-title">
-      <h4></h4>
-      <h3>
-        </h>
+  <!-- Trending Section (Movies + TV, India) -->
+  <section class="movie-section trending">
+    <h2>Trending (India)</h2>
+    <div class="movie-grid">
+      {% for item in trending_items %}
+        <div class="movie-card">
+          <a href="{{ url_for('movie.movie_details', item_type=item.media_type, item_id=item.id) }}">
+            <div class="poster-container">
+              {% if item.poster_path %}
+                <img 
+                  src="https://image.tmdb.org/t/p/w300{{ item.poster_path }}" 
+                  alt="{{ item.media_type == 'tv' and item.name or item.title }}"
+                >
+              {% else %}
+                <div class="no-poster">No Image</div>
+              {% endif %}
+            </div>
+
+            <div class="movie-info">
+              <h3>
+                {% if item.media_type == 'tv' %}
+                  {{ item.name }}
+                {% else %}
+                  {{ item.title }}
+                {% endif %}
+              </h3>
+              <div class="movie-meta">
+                <span>
+                  {% if item.media_type == 'tv' %}
+                    {{ item.first_air_date[:4] if item.first_air_date else 'N/A' }}
+                  {% else %}
+                    {{ item.release_date[:4] if item.release_date else 'N/A' }}
+                  {% endif %}
+                </span>
+                <span>
+                  {% if item.vote_average is not none %}
+                    {{ (item.vote_average / 2.0)|round(1) }} / 5
+                  {% else %}
+                    N/A
+                  {% endif %}
+                </span>
+              </div>
+            </div>
+
+            <div class="card-popup">
+              <p>View Details</p>
+            </div>
+          </a>
+        </div>
+      {% endfor %}
     </div>
-  </div>
-</section>
-<section class="movie-section trending">
-  <h2>Trending Movies</h2>
-  <div class="movie-grid">
-    {% for movie in trending_movies %}
-    <div class="movie-card">
-      <a href="{{ url_for('movie.movie_details', movie_id=movie['id']) }}">
-        <div class="poster-container">
-          <img src="https://image.tmdb.org/t/p/w300{{ movie['poster_path'] }}" alt="{{ movie['title'] }}">
-        </div>
-        <div class="movie-info">
-          <h3>{{ movie['title'] }}</h3>
-          <div class="movie-meta">
-            <span>{{ movie.release_date[:4] if movie.release_date else 'N/A' }}</span>
-            <span>{{ (movie.vote_average / 2.0)|round(1) }} / 5</span>
-          </div>
-        </div>
-        <!-- Popup element -->
-        <div class="card-popup">
-          <p>View Details</p>
-        </div>
-      </a>
-    </div>
-    {% endfor %}
-  </div>
-</section>
+  </section>
 {% endblock %}
 
 {% block scripts %}
-<script type="module">
-  import { TMDB_API_KEY, TMDB_BASE_URL } from "{{ url_for('static', filename='js/main.js') }}";
+  <script type="module">
+    import { TMDB_API_KEY, TMDB_BASE_URL } from "{{ url_for('static', filename='js/main.js') }}";
 
-  async function setRandomBanner() {
-    const apiUrl = `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=2`;
-    try {
-      const response = await fetch(apiUrl);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    async function setRandomBannerIndia() {
+      const apiUrl = `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1&region=IN`;
+      try {
+        const response = await fetch(apiUrl);
+        const data = await response.json();
+        const movies = data.results;
+        if (!movies || movies.length === 0) return;
+
+        const randomMovie = movies[Math.floor(Math.random() * movies.length)];
+        const backdropUrl = `https://image.tmdb.org/t/p/original${randomMovie.backdrop_path}`;
+        const heroElement = document.querySelector(".hero");
+        heroElement.style.backgroundImage = `
+          linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)),
+          url('${backdropUrl}')
+        `;
+
+        const movieTitleEl = document.querySelector(".movie-title h3");
+        const movieSubtitleEl = document.querySelector(".movie-title h4");
+
+        if (movieTitleEl) {
+          movieTitleEl.textContent = randomMovie.title;
+        }
+        if (movieSubtitleEl) {
+          movieSubtitleEl.textContent = randomMovie.release_date
+            ? new Date(randomMovie.release_date).getFullYear()
+            : "Now Playing";
+        }
+      } catch (error) {
+        console.error("Error fetching random popular movie (India):", error);
       }
-      const data = await response.json();
-      const movies = data.results;
-      const randomMovie = movies[Math.floor(Math.random() * movies.length)];
-
-      // Set background image
-      const backdropUrl = `https://image.tmdb.org/t/p/original${randomMovie.backdrop_path}`;
-      const heroElement = document.querySelector(".hero");
-      heroElement.style.backgroundImage = `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.4)), url('${backdropUrl}')`;
-
-      // Update movie title in the bottom right
-      const movieTitleElement = document.querySelector(".movie-title h3");
-      const movieSubtitleElement = document.querySelector(".movie-title h4");
-
-      if (movieTitleElement) {
-        movieTitleElement.textContent = randomMovie.title;
-      }
-
-      if (movieSubtitleElement) {
-        // You can use original_title, release_date, or other info here
-        movieSubtitleElement.textContent = randomMovie.release_date
-          ? new Date(randomMovie.release_date).getFullYear()
-          : "Now Playing";
-      }
-
-    } catch (error) {
-      console.error("Error fetching random movie banner:", error);
-      // Set fallback background image
-      const heroElement = document.querySelector(".hero");
-      heroElement.style.backgroundImage = `url('{{ url_for('static', filename='images/default-banner.png') }}')`;
     }
-  }
 
-  document.addEventListener("DOMContentLoaded", setRandomBanner);
-</script>
-<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    document.addEventListener("DOMContentLoaded", setRandomBannerIndia);
+  </script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}

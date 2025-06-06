@@ -30,6 +30,11 @@ body {
 a {
   text-decoration: none;
   color: inherit;
+  transition: color var(--transition-speed);
+}
+
+a:hover {
+  color: var(--accent);
 }
 
 /* ========================================================================
@@ -46,15 +51,13 @@ a {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.5rem;
-  height: auto;
+  padding: 0.5rem 1rem;
 }
 
 .main-nav .brand {
-  height: 48px;
   display: flex;
   align-items: center;
-  margin-left: 0.5rem;
+  height: 48px;
 }
 
 .main-nav .brand img {
@@ -75,17 +78,18 @@ a {
   font-size: 1rem;
   text-transform: uppercase;
   letter-spacing: 1px;
-  transition: all 0.3s ease;
+  transition: all var(--transition-speed) ease;
+  cursor: pointer;
 }
 
 .btn-primary {
-  background: #e50914;
-  color: white;
+  background-color: var(--primary);
+  color: var(--text);
   border: none;
 }
 
 .btn-primary:hover {
-  background: #a2181f;
+  background-color: #a2181f;
 }
 
 /* ========================================================================
@@ -127,29 +131,29 @@ a {
 }
 
 .notification {
-  /* Keep existing notification styles */
   animation: fadeIn 0.3s ease forwards;
   margin-bottom: 1rem;
   background: rgba(0, 0, 0, 0.9);
-  color: white;
+  color: var(--text);
   padding: 1rem 1.5rem;
   border-radius: 8px;
   display: flex;
-  align-items: flex-start; /* Changed from center to flex-start for better text alignment */
+  align-items: flex-start;
   gap: 1rem;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   max-width: 100%;
-  width: auto; /* Changed from fit-content to auto */
+  width: auto;
 }
 
 .notification-message {
-  display: block;
-  max-width: 400px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  flex-grow: 1;
+  min-width: 0;          /* Allows wrapping */
+  white-space: normal;   /* Allows wrapping */
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .notification.fade-out-anim {
@@ -159,15 +163,6 @@ a {
 .notification-icon {
   font-size: 1.2rem;
   flex-shrink: 0;
-}
-
-.notification-message {
-  flex-grow: 1;
-  min-width: 0;         /* Allow shrinking for wrapping */
-  white-space: normal;
-  word-break: break-word;
-  overflow-wrap: break-word;
-  max-width: 100%;      /* Prevent overflow */
 }
 
 .notification-success .notification-icon {
@@ -194,7 +189,7 @@ a {
   padding: 0.5rem 0.78rem;
   cursor: pointer;
   border-radius: 50%;
-  transition: background 0.2s;
+  transition: background var(--transition-speed);
   margin-right: 0.5rem;
 }
 
@@ -218,7 +213,7 @@ a {
   border-radius: 14px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
   z-index: 2000;
-  padding: 0.6rem 1rem 0.6rem 1rem;
+  padding: 0.6rem 1rem;
   border: 1px solid #333;
   width: 350px;
 }
@@ -318,6 +313,11 @@ a {
   text-overflow: ellipsis;
 }
 
+.autocomplete-items.open-down {
+  top: auto;
+  bottom: 145%;
+}
+
 /* User Dropdown */
 .user-dropdown-menu {
   display: none;
@@ -354,7 +354,7 @@ a {
   object-fit: cover;
   flex-shrink: 0;
   background: #181818;
-  border: 0.1rem solid #e50914;
+  border: 0.1rem solid var(--accent);
   display: block;
 }
 
@@ -368,7 +368,7 @@ a {
 .user-dropdown-menu .hello-greeting {
   font-weight: 400;
   font-size: 1rem;
-  color: #b3b3b3;
+  color: var(--text-secondary);
   letter-spacing: 0.5px;
   margin-bottom: 0.1rem;
   line-height: 1.2;
@@ -377,8 +377,7 @@ a {
 .user-dropdown-menu .username {
   font-weight: bold;
   font-size: 1.1rem;
-  color: #fff;
-  margin-bottom: 0;
+  color: var(--text);
   line-height: 1.2;
 }
 
@@ -397,9 +396,9 @@ a {
   align-items: center;
   gap: 0.7rem;
   padding: 0.5rem 1rem;
-  color: #fff;
+  color: var(--text);
   border-radius: 8px;
-  transition: background 0.15s;
+  transition: background var(--transition-speed);
   font-size: 1rem;
 }
 
@@ -414,11 +413,13 @@ a {
 /* ========================================================================
    Responsiveness
 ======================================================================== */
+
+/* Tablet / small-desktop (below 768px) */
 @media (max-width: 768px) {
   .main-nav {
     flex-direction: column;
     align-items: flex-start;
-    padding: 10px 20px;
+    padding: 0.75rem 1rem;
   }
   
   .nav-controls {
@@ -426,17 +427,15 @@ a {
     width: 100%;
     justify-content: space-between;
   }
-}
 
-@media (max-width: 600px) {
   #autocomplete-list {
-    left: 0;
-    right: 0;
+    width: 100%;
     min-width: 0;
     max-width: 100vw;
   }
 }
 
+/* Large phones (below 500px) */
 @media (max-width: 500px) {
   .notification {
     flex-direction: column;
@@ -444,3 +443,4 @@ a {
     gap: 0.5rem;
   }
 }
+

@@ -2,47 +2,51 @@
 {% block css %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
 {% endblock %}
+
 {% block content %}
 <section class="movie-section search-results">
   <h2>Search Results for "{{ query }}"</h2>
   <div class="movie-grid">
-      {% for movie in search_results %}
-      <div class="movie-card">
-        <a href="{{ url_for('movie.movie_details', movie_id=movie['id']) }}">
-          <div class="poster-container">
-            {% if movie.poster_path %}
-              <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
-            {% else %}
-              <div style="width:100%;height:300px;background:#333;display:flex;align-items:center;justify-content:center;color:#aaa;">No Image</div>
-            {% endif %}
+    {% for movie in search_results %}
+    <div class="movie-card">
+      <a href="{{ url_for('movie.movie_details', item_type=movie.media_type, item_id=movie.id) }}">
+        <div class="poster-container">
+          {% if movie.poster_path %}
+          <img src="https://image.tmdb.org/t/p/w300{{ movie.poster_path }}" alt="{{ movie.title }}">
+          {% else %}
+          <div
+            style="width:100%; height:300px; background:#333; display:flex; align-items:center; justify-content:center; color:#aaa;">
+            No Image
           </div>
-          <div class="movie-info">
-            <h3>{{ movie.title }}</h3>
-            <div class="movie-meta">
-              <span>
-                {% if movie.release_date %}
-                  {{ movie.release_date[:4] }}
-                {% else %}
-                  N/A
-                {% endif %}
-              </span>
-              <span>
-                {% if movie.vote_average is defined %}
-                  {{ (movie.vote_average / 2.0)|round(1) }} / 5
-                {% else %}
-                  N/A
-                {% endif %}
-              </span>
-            </div>
+          {% endif %}
+        </div>
+        <div class="movie-info">
+          <h3>{{ movie.title }}</h3>
+          <div class="movie-meta">
+            <span>
+              {% if movie.release_date %}
+              {{ movie.release_date[:4] }}
+              {% else %}
+              N/A
+              {% endif %}
+            </span>
+            <span>
+              {% if movie.vote_average %}
+              {{ (movie.vote_average / 2.0)|round(1) }} / 5
+              {% else %}
+              N/A
+              {% endif %}
+            </span>
           </div>
-          <div class="card-popup">
-            <p>View Details</p>
-          </div>
-        </a>
-      </div>
-      {% else %}
-        <p>No results found.</p>
-      {% endfor %}
+        </div>
+        <div class="card-popup">
+          <p>View Details</p>
+        </div>
+      </a>
+    </div>
+    {% else %}
+    <p>No results found.</p>
+    {% endfor %}
   </div>
 </section>
 {% endblock %}
