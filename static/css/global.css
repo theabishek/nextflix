@@ -71,7 +71,7 @@ a:hover {
 /* ========================================================================
    Button Styles
 ======================================================================== */
-.btn {
+.btn-nav {
   padding: 0.75rem 1.55rem;
   border-radius: 12px;
   font-weight: 600;
@@ -82,14 +82,15 @@ a:hover {
   cursor: pointer;
 }
 
-.btn-primary {
+.btn-primary-nav {
   background-color: var(--primary);
   color: var(--text);
   border: none;
 }
 
-.btn-primary:hover {
+.btn-primary-nav:hover {
   background-color: #a2181f;
+  color: --var(--primary);
 }
 
 /* ========================================================================

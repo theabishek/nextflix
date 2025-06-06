@@ -37,10 +37,9 @@ body::before {
 
 /* Auth Container */
 .auth-container {
-  max-width: 500px;
-  width: 90%;
+  max-width: 25rem;
   margin: 5rem auto;
-  padding: 2rem;
+  padding: 1.5rem;
   background: rgba(26, 27, 38, 0.85);
   backdrop-filter: blur(12px);
   border-radius: var(--border-radius-lg);
@@ -139,12 +138,12 @@ body::before {
 }
 
 /* Button Styles */
-.btnn {
+.btnn-login {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  padding: 1.25rem;
+  padding: 1rem;
   border-radius: var(--border-radius-sm);
   font-size: 1.1rem;
   font-weight: 600;
@@ -154,13 +153,40 @@ body::before {
   text-decoration: none;
 }
 
-.btnn-primary {
+.btnn-primary-login {
   background: var(--accent-primary);
   color: white;
   margin-top: 1rem;
 }
 
-.btnn-primary:hover {
+.btnn-primary-login:hover {
+  background: var(--accent-primary-hover);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.btnn-register {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-radius: var(--border-radius-sm);
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-medium);
+  border: none;
+  text-decoration: none;
+}
+
+.btnn-primary-register {
+  background: var(--accent-primary);
+  color: white;
+  margin-top: 1rem;
+}
+
+.btnn-primary-register:hover {
   background: var(--accent-primary-hover);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);

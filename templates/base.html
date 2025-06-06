@@ -63,9 +63,9 @@
       </div>
       {% else %}
       {% if request.endpoint == 'auth.login' %}
-      <a href="{{ url_for('auth.register') }}" class="btnn btnn-primary btn-large">Join Now</a>
+      <a href="{{ url_for('auth.register') }}" class="btn-nav btn-primary-nav">Join Now</a>
       {% else %}
-      <a href="{{ url_for('auth.login') }}" class="btnn btnn-primary btn-large">Sign In</a>
+      <a href="{{ url_for('auth.login') }}" class="btn-nav btn-primary-nav">Sign In</a>
       {% endif %}
       {% endif %}
     </div>
