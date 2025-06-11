@@ -339,83 +339,105 @@ form input:not([type="radio"]):focus {
   transform: scale(1.1);
 }
 
-/* ===== Responsive Design ===== */
+/* ===== Responsive: Tablets & Small Desktops ===== */
 @media (max-width: 1024px) {
   .profile-container {
     flex-direction: column;
-    margin: 1rem;
+    margin: 1.5rem;
     min-height: auto;
   }
-  
   .profile-sidebar {
-    flex-direction: row;
+    flex: 0 0 auto;
+    width: 100%;
+    display: flex;
     overflow-x: auto;
     padding: 1rem;
-    gap: 0.5rem;
     border-right: none;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 0.5rem;
   }
-  
   .profile-option {
+    flex: 1 0 auto;
     padding: 0.75rem 1rem;
-    font-size: 0.9rem;
+    font-size: 0.95rem;
     white-space: nowrap;
   }
-  
   .profile-content {
-    padding: 2rem;
+    padding: 1.5rem;
   }
 }
 
-@media (max-width: 576px) {
-  .profile-content {
-    padding: 1.5rem;
+/* ===== Responsive: Large Phones (Portrait) ===== */
+@media (max-width: 768px) {
+  .profile-sidebar {
+    padding: 0.75rem;
+    gap: 0.25rem;
   }
-  
+  .profile-option {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
   .profile-info {
-    padding: 1.5rem;
+    padding: 1.25rem;
   }
-  
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    margin-bottom: 1rem;
+  }
+  form {
+    padding: 0 1rem;
+  }
+  .form-group {
+    margin-bottom: 1.25rem;
+  }
+  form input:not([type="radio"]) {
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
   .avatar-selection {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
     gap: 1rem;
   }
-  
   .avatar-selection img {
     width: 70px;
     height: 70px;
   }
 }
 
-/* ===== Utility Classes ===== */
-.text-danger {
-  color: var(--danger);
-}
-
-.text-center {
-  text-align: center;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* ===== Section Headings ===== */
-.profile-section h2 {
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  color: var(--text-primary);
-  position: relative;
-  padding-bottom: 0.75rem;
-}
-
-.profile-section h2::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 60px;
-  height: 3px;
-  background: var(--accent-primary);
-  border-radius: 3px;
+/* ===== Responsive: Small Phones ===== */
+@media (max-width: 576px) {
+  .profile-container {
+    margin: 1rem;
+  }
+  .profile-sidebar {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+  .profile-option {
+    flex: 0 0 48%;
+    text-align: center;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.85rem;
+  }
+  .profile-content {
+    padding: 1rem;
+  }
+  .profile-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .btnn {
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 0.95rem;
+  }
+  .avatar-selection {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+    gap: 0.75rem;
+  }
+  .avatar-selection img {
+    width: 60px;
+    height: 60px;
+  }
 }

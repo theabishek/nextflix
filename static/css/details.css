@@ -23,7 +23,7 @@ body {
   background-color: var(--dark);
   color: var(--light);
   line-height: 1.4;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 a {
@@ -43,16 +43,8 @@ a {
 }
 
 .banner-overlay {
-  background: linear-gradient(
-      to top,
-      var(--dark) 10%,
-      transparent 90%
-    ),
-    linear-gradient(
-      to right,
-      var(--dark) 0%,
-      transparent 70%
-    );
+  background: linear-gradient(to top, var(--dark) 10%, transparent 90%),
+    linear-gradient(to right, var(--dark) 0%, transparent 70%);
   height: 100%;
   padding: 2rem;
   display: flex;
@@ -215,7 +207,7 @@ a {
   cursor: pointer;
   font-size: 16px;
   border-radius: 4px;
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
   transition: background-color var(--transition);
   background: var(--gray);
   color: var(--light);
@@ -376,8 +368,12 @@ a {
 
 .movie-card {
   position: relative;
-  background: linear-gradient(135deg, rgba(30, 30, 30, 0.9) 0%, rgba(40, 40, 40, 0.9) 100%);
-  border-radius: 12px;  
+  background: linear-gradient(
+    135deg,
+    rgba(30, 30, 30, 0.9) 0%,
+    rgba(40, 40, 40, 0.9) 100%
+  );
+  border-radius: 12px;
   border: 1px dashed rgba(255, 255, 255, 0.1);
   overflow: hidden;
   opacity: 0;
@@ -386,11 +382,21 @@ a {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.movie-card:nth-child(5n+1) { animation-delay: 0.1s; }
-.movie-card:nth-child(5n+2) { animation-delay: 0.3s; }
-.movie-card:nth-child(5n+3) { animation-delay: 0.2s; }
-.movie-card:nth-child(5n+4) { animation-delay: 0.4s; }
-.movie-card:nth-child(5n+5) { animation-delay: 0.15s; }
+.movie-card:nth-child(5n + 1) {
+  animation-delay: 0.1s;
+}
+.movie-card:nth-child(5n + 2) {
+  animation-delay: 0.3s;
+}
+.movie-card:nth-child(5n + 3) {
+  animation-delay: 0.2s;
+}
+.movie-card:nth-child(5n + 4) {
+  animation-delay: 0.4s;
+}
+.movie-card:nth-child(5n + 5) {
+  animation-delay: 0.15s;
+}
 
 .movie-card:hover {
   transform: translateY(-10px) scale(1.03);
@@ -437,7 +443,7 @@ a {
   font-size: 1.15rem;
   margin-bottom: 8px;
   color: var(--text);
-  font-family: 'Montserrat', sans-serif;
+  font-family: "Montserrat", sans-serif;
 }
 
 .movie-meta {
@@ -479,7 +485,7 @@ a {
 }
 
 .review-form-section h2::before {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   top: 50%;
@@ -711,7 +717,6 @@ a {
   display: none;
 }
 
-
 /* ===================================================================== */
 /*                            Responsive CSS                             */
 /*  –––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––  */
@@ -734,7 +739,6 @@ a {
   /* Shrink banner text & center */
   .movie-banner {
     height: 50vh;
-    padding: 1rem;
     align-items: center;
     justify-content: center;
     text-align: center;
@@ -750,11 +754,46 @@ a {
     margin-bottom: 1rem;
   }
 
+  .wide-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .narrow-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+  }
+
+  .narrow-buttons form {
+    flex: 1;
+  }
+
+  .narrow-buttons button {
+    width: 100%;
+  }
+
   /* Change grid to single column */
   .movie-info-section {
     padding: 1rem;
     gap: 1.5rem;
   }
+
+  .trailer-section {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .recommendation {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
+  .review-container {
+    padding: 1rem;
+    gap: 1.5rem;
+  }
+
   .metadata-grid {
     grid-template-columns: 1fr;
   }
@@ -772,70 +811,27 @@ a {
     grid-template-columns: 1fr;
     padding: 1.5rem;
     gap: 2rem;
+    margin: 1rem;
   }
+
+  /* FIXED REVIEW SECTION RESPONSIVE ISSUES */
   .review-form-section {
-    display: none; /* Make review form non-sticky & appear above reviews */
-  }
-  .reviews-section {
-    width: 100%;
-  }
-}
-
-/* 3) Small phones (below 480px) */
-@media (max-width: 480px) {
-  .movie-banner {
-    height: 40vh;
-  }
-  .movie-title {
-    font-size: 2rem;
-  }
-  .trailer-section,
-  .recommendation {
-    padding: 0 1rem;
-  }
-  .movie-grid {
-    gap: 12px;
-  }
-  .movie-card {
-    border: 1px solid rgba(255, 255, 255, 0.07);
-  }
-  .movie-info-section {
-    margin-top: -30px;
-  }
-  .metadata-grid {
-    gap: 0.8rem;
-  }
-  .metadata-item {
-    padding: 0.8rem;
-  }
-  .movie-details {
-    padding: 1rem;
-  }
-  .action-buttons {
-    gap: 0.5rem;
-  }
-  .btnn {
-    padding: 8px 16px;
-    font-size: 14px;
+    position: static;
+    border-right: none;
+    padding-right: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 2rem;
+    margin-bottom: 2rem;
   }
 
-  /* Reviews adjustments */
   .reviews-scroll-container {
     height: auto;
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 0;
   }
-  .review-card {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-  .review-avatar {
-    width: 40px;
-    height: 40px;
-  }
-  .review-text {
-    font-size: 0.9rem;
-  }
-  .review-container {
-    padding: 1rem;
-    gap: 1.5rem;
+
+  .review-form-section h2::before {
+    content: none;
   }
 }
